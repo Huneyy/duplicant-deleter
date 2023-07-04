@@ -1,0 +1,52 @@
+import os
+import hashlib
+
+def get_file_hash(file_path):
+    """Calculate and return the MD5 hash of a file."""
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as file:
+        for chunk in iter(lambda: file.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def find_duplicate_files(directory):
+    """Find duplicate video files in the given directory."""
+    file_hashes = {}
+    duplicate_files = []
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_hash = get_file_hash(file_path)
+            if file_hash in file_hashes:
+                duplicate_files.append(file_path)
+            else:
+                file_hashes[file_hash] = file_path
+
+    return duplicate_files
+
+def remove_duplicate_files(duplicate_files):
+    """Remove duplicate video files."""
+    for file in duplicate_files:
+        try:
+            os.remove(file)
+            print(f"Deleted: {file}")
+        except OSError as e:
+            print(f"Error deleting file: {file} - {e}")
+
+# Directory to search for duplicate video files
+directory = "/path/to/directory"
+
+# Find duplicate files
+duplicates = find_duplicate_files(directory)
+
+if duplicates:
+    print("Duplicate files found:")
+    for file in duplicates:
+        print(file)
+
+    confirm = input("Do you want to delete the duplicates? (y/n): ")
+    if confirm.lower() == "y":
+        remove_duplicate_files(duplicates)
+else:
+    print("No duplicate files found.")
